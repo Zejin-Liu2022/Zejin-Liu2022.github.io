@@ -214,7 +214,7 @@
       </div>
 
       <div id="status" class="status">
-        映射：00→木，01→钼，10→嘿，11→𬭶。语法层让“木”倾向于开句、避免裸着收尾，并尽量保护“嘿嘿嘿”；🤓 ~ ！ 不参与解密。
+        映射：00→木，01→钼，10→嘿，11→𬭶。语法层把“木、钼”都视为木音：倾向开句、不裸着收尾、连续木音必须拆开，并尽量保护“嘿嘿嘿”；🤓 ~ ！ 不参与解密。
       </div>
     </section>
 </main>
@@ -229,6 +229,7 @@
   const ALPHABET = ["木", "钼", "嘿", "𬭶"];
   const REVERSE = new Map(ALPHABET.map((ch, i) => [ch, i]));
   const NOISE = ["🤓", "~", "！"];
+  const MU_SOUNDS = new Set(["木", "钼"]);
 
   const left = document.getElementById("left");
   const right = document.getElementById("right");
@@ -291,11 +292,13 @@
       const ch = chars[i];
       const prev = chars[i - 1] ?? "";
       const next = chars[i + 1] ?? "";
+      const isMu = MU_SOUNDS.has(ch);
+      const nextIsMu = MU_SOUNDS.has(next);
 
       // 核心规则：
-      // “木”倾向于作为一个坏笑小句的开头。
-      // 如果当前句已经有内容，再遇到木，就先结束上一句。
-      if (ch === "木" && current.length > 0) {
+      // “木音”包括 木、钼。它们都倾向于作为一个坏笑小句的开头。
+      // 如果当前句已经有内容，再遇到木音，就先结束上一句。
+      if (isMu && current.length > 0) {
         flushCurrent();
       }
 
@@ -306,19 +309,15 @@
         continue;
       }
 
-      // 如果当前句只是一个“木”，允许它单独成句。
-      // 连续“木木”时尤其需要把前一个木单独切开。
-      if (current === "木" && next === "木") {
+      // 如果当前句只有一个木音，而下一个仍是木音，
+      // 当前木音单独成句，避免 木木 / 木钼 / 钼木 / 钼钼 连在一起。
+      if (isMu && [...current].length === 1 && nextIsMu) {
         flushCurrent();
         continue;
       }
 
-      // 当“木”后面已经带出至少一个字符时，
-      // 遇到下一个木前会自然在下一轮切句，这里不用额外处理。
-      //
-      // 对非木开头的小句（例如密文开头是 嘿/钼/𬭶），
-      // 允许它们自然延伸；强度较高时，在较长句中适当切分，
-      // 但避免把“嘿嘿嘿”拆开。
+      // 对非木音开头的小句，允许自然延伸；
+      // 强度较高时，在较长句中适当切分，但避免拆开“嘿嘿嘿”。
       const cpLen = [...current].length;
       const protectedHeiRun =
         (prev === "嘿" && ch === "嘿") ||
@@ -328,7 +327,7 @@
         cpLen >= 5 &&
         !protectedHeiRun &&
         next &&
-        next !== "木" &&
+        !nextIsMu &&
         Math.random() < strength * 0.18
       ) {
         flushCurrent();
@@ -337,8 +336,8 @@
 
     flushCurrent();
 
-    // 把分好的坏笑小句拼接起来。
-    // 所有分隔符都只是展示噪声，解密时会被直接删掉。
+    // 拼接坏笑小句。
+    // 分隔符全部属于展示层，解密时会直接丢弃。
     let result = "";
 
     for (let i = 0; i < phrases.length; i++) {
@@ -346,28 +345,30 @@
       result += phrase;
 
       const isLast = i === phrases.length - 1;
-      const startsWithMu = phrase.startsWith("木");
-      const endsWithMu = phrase.endsWith("木");
+      const phraseChars = [...phrase];
+      const isSingleMu =
+        phraseChars.length === 1 && MU_SOUNDS.has(phraseChars[0]);
+      const endsWithMu =
+        phraseChars.length > 0 && MU_SOUNDS.has(phraseChars[phraseChars.length - 1]);
 
       if (!isLast) {
-        // 句间必须有分隔，这样“木”就能视觉上成为下一句开头。
-        // 木单独成句时用更明确的停顿。
-        if (phrase === "木") {
-          result += randomFrom(["！", "~", "🤓", "！🤓"]);
+        // 句间必须有分隔，使下一个木音视觉上成为新句开头。
+        if (isSingleMu) {
+          result += randomFrom(["！", "~", "🤓", "！🤓", "~🤓"]);
         } else {
           result += phraseSeparator(strengthPercent, true);
         }
         continue;
       }
 
-      // 最后一小句的结尾：
-      // 木一般不裸着做结尾；如果它单独成句，则必须补语气符号。
+      // 木音一般不裸着做最终结尾。
+      // 单独一个 木/钼 可以成句，但必须带语气符号。
       if (endsWithMu) {
-        result += phrase === "木"
+        result += isSingleMu
           ? randomFrom(["！", "~", "🤓", "！🤓", "~🤓"])
           : randomFrom(["~", "！", "🤓"]);
       } else {
-        // 嘿可以自然结尾，所以不是每次都强行补。
+        // 嘿可以自然收尾，所以允许不加任何符号。
         const baseChance = 0.38 + strength * 0.5;
         if (Math.random() < baseChance) {
           result += phraseSeparator(strengthPercent, false);
@@ -432,7 +433,7 @@
     try {
       right.value = encryptText(left.value, Number(noiseRange.value));
       updateCounts();
-      setStatus("加密完成。语法美化器会让“木”尽量作为小句开头、避免裸着收尾，并保护连续“嘿嘿嘿”；同一原文每次外观仍可不同。", "ok");
+      setStatus("加密完成。语法美化器会把“木、钼”统一按木音处理：尽量作为小句开头、避免裸着收尾、连续木音强制拆开，并保护“嘿嘿嘿”。", "ok");
     } catch (err) {
       setStatus("加密失败：" + err.message, "err");
     }

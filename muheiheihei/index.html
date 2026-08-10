@@ -177,7 +177,6 @@
           所以中文、英文、Emoji、换行和标点都能无损恢复。
         </p>
       </div>
-      <div class="badge">纯前端 · 不上传任何内容</div>
     </header>
 
     <section class="card">
@@ -188,7 +187,7 @@
         <button id="clearBtn" class="ghost">清空</button>
         <div class="grow"></div>
         <label class="noise-control">
-          坏笑美化强度
+          坏笑语法强度
           <input id="noiseRange" type="range" min="0" max="45" value="14" />
           <span id="noiseValue">14%</span>
         </label>
@@ -215,7 +214,7 @@
       </div>
 
       <div id="status" class="status">
-        映射：00→木，01→钼，10→嘿，11→𬭶。美化层会拆开“木钼”、保护“嘿嘿嘿”；🤓 ~ ！ 不参与解密。
+        映射：00→木，01→钼，10→嘿，11→𬭶。语法层让“木”倾向于开句、避免裸着收尾，并尽量保护“嘿嘿嘿”；🤓 ~ ！ 不参与解密。
       </div>
     </section>
 </main>
@@ -253,93 +252,127 @@
     rightCount.textContent = `${countCodePoints(right.value)} 字符`;
   }
 
-  function randomNoise(preferSoft = false) {
-    // “~”比感叹号和表情更适合作为词内分隔符。
-    if (preferSoft) {
-      const soft = ["~", "~", "🤓", "！"];
-      return soft[Math.floor(Math.random() * soft.length)];
-    }
-    return NOISE[Math.floor(Math.random() * NOISE.length)];
+  function randomFrom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  function addNoiseBurst(preferSoft = false) {
-    let out = randomNoise(preferSoft);
-    // 偶尔制造“~~ / 🤓~ / ！！”之类更像语气的结尾或停顿。
-    if (Math.random() < 0.14) out += randomNoise(preferSoft);
+  function phraseSeparator(strengthPercent, soft = false) {
+    const strength = strengthPercent / 100;
+
+    // 句中更偏向 ~，句尾更偏向 ！/🤓。
+    const softPool = ["~", "~", "~", "！", "🤓"];
+    const hardPool = ["！", "~", "🤓", "！！", "~🤓", "！🤓"];
+
+    let out = randomFrom(soft ? softPool : hardPool);
+
+    // 强度越高，越可能追加第二个语气符号。
+    if (Math.random() < strength * 0.35) {
+      out += randomFrom(["~", "！", "🤓"]);
+    }
     return out;
   }
 
-  function decorate(core, densityPercent) {
-    const p = densityPercent / 100;
-    if (p <= 0 || !core) return core;
+  function decorate(core, strengthPercent) {
+    if (!core) return core;
 
     const chars = [...core];
-    let result = "";
-    let charsSinceNoise = 0;
+    const strength = Math.max(0, Math.min(100, strengthPercent)) / 100;
+    const phrases = [];
+    let current = "";
+
+    function flushCurrent() {
+      if (current) {
+        phrases.push(current);
+        current = "";
+      }
+    }
 
     for (let i = 0; i < chars.length; i++) {
       const ch = chars[i];
-      const next = chars[i + 1] ?? "";
       const prev = chars[i - 1] ?? "";
+      const next = chars[i + 1] ?? "";
 
-      result += ch;
-      charsSinceNoise++;
-
-      if (!next) break;
-
-      // 规则 1：强制拆开“木钼”。
-      // 这只是展示层处理，不改变真正的 Base‑4 数据。
-      if (ch === "木" && next === "钼") {
-        result += addNoiseBurst(true);
-        charsSinceNoise = 0;
-        continue;
+      // 核心规则：
+      // “木”倾向于作为一个坏笑小句的开头。
+      // 如果当前句已经有内容，再遇到木，就先结束上一句。
+      if (ch === "木" && current.length > 0) {
+        flushCurrent();
       }
 
-      // 规则 2：保护“嘿嘿 / 嘿嘿嘿”。
-      // 坏笑的核心节奏尽量不断开。
+      current += ch;
+
+      // 连续“嘿嘿 / 嘿嘿嘿”尽量不断句。
       if (ch === "嘿" && next === "嘿") {
         continue;
       }
 
-      // 规则 3：两个“非嘿”字符连在一起时，更容易插入停顿，
-      // 尤其是木/钼之间，看起来更像“坏笑语气”而不是随机汉字。
-      const bothNonHei = ch !== "嘿" && next !== "嘿";
-      if (bothNonHei && charsSinceNoise >= 2 && Math.random() < Math.min(0.78, p * 2.2)) {
-        result += addNoiseBurst(true);
-        charsSinceNoise = 0;
+      // 如果当前句只是一个“木”，允许它单独成句。
+      // 连续“木木”时尤其需要把前一个木单独切开。
+      if (current === "木" && next === "木") {
+        flushCurrent();
         continue;
       }
 
-      // 规则 4：连续出现多个木或多个钼时，适当打断。
-      const repeatedMuMo =
-        (ch === "木" || ch === "钼") &&
-        ch === next;
-
-      if (repeatedMuMo && Math.random() < Math.min(0.62, p * 1.8)) {
-        result += addNoiseBurst(true);
-        charsSinceNoise = 0;
-        continue;
-      }
-
-      // 规则 5：普通随机噪声。
-      // 如果当前正处于“嘿嘿嘿”前后，降低插入概率，避免破坏节奏。
-      const nearHeiRun =
+      // 当“木”后面已经带出至少一个字符时，
+      // 遇到下一个木前会自然在下一轮切句，这里不用额外处理。
+      //
+      // 对非木开头的小句（例如密文开头是 嘿/钼/𬭶），
+      // 允许它们自然延伸；强度较高时，在较长句中适当切分，
+      // 但避免把“嘿嘿嘿”拆开。
+      const cpLen = [...current].length;
+      const protectedHeiRun =
         (prev === "嘿" && ch === "嘿") ||
         (ch === "嘿" && next === "嘿");
 
-      const ordinaryProbability = nearHeiRun ? p * 0.18 : p;
-
-      if (charsSinceNoise >= 3 && Math.random() < ordinaryProbability) {
-        result += addNoiseBurst(false);
-        charsSinceNoise = 0;
+      if (
+        cpLen >= 5 &&
+        !protectedHeiRun &&
+        next &&
+        next !== "木" &&
+        Math.random() < strength * 0.18
+      ) {
+        flushCurrent();
       }
     }
 
-    // 规则 6：结尾更像一句“邪恶坏笑”。
-    // 优先使用 ~ / ！ / 🤓，有时补成双符号。
-    if (Math.random() < 0.82) {
-      const endings = ["~", "！", "🤓", "~~", "~🤓", "！🤓", "！！"];
-      result += endings[Math.floor(Math.random() * endings.length)];
+    flushCurrent();
+
+    // 把分好的坏笑小句拼接起来。
+    // 所有分隔符都只是展示噪声，解密时会被直接删掉。
+    let result = "";
+
+    for (let i = 0; i < phrases.length; i++) {
+      const phrase = phrases[i];
+      result += phrase;
+
+      const isLast = i === phrases.length - 1;
+      const startsWithMu = phrase.startsWith("木");
+      const endsWithMu = phrase.endsWith("木");
+
+      if (!isLast) {
+        // 句间必须有分隔，这样“木”就能视觉上成为下一句开头。
+        // 木单独成句时用更明确的停顿。
+        if (phrase === "木") {
+          result += randomFrom(["！", "~", "🤓", "！🤓"]);
+        } else {
+          result += phraseSeparator(strengthPercent, true);
+        }
+        continue;
+      }
+
+      // 最后一小句的结尾：
+      // 木一般不裸着做结尾；如果它单独成句，则必须补语气符号。
+      if (endsWithMu) {
+        result += phrase === "木"
+          ? randomFrom(["！", "~", "🤓", "！🤓", "~🤓"])
+          : randomFrom(["~", "！", "🤓"]);
+      } else {
+        // 嘿可以自然结尾，所以不是每次都强行补。
+        const baseChance = 0.38 + strength * 0.5;
+        if (Math.random() < baseChance) {
+          result += phraseSeparator(strengthPercent, false);
+        }
+      }
     }
 
     return result;
@@ -399,7 +432,7 @@
     try {
       right.value = encryptText(left.value, Number(noiseRange.value));
       updateCounts();
-      setStatus("加密完成。美化器会保护“嘿嘿嘿”、强制拆开“木钼”，并随机加入语气符号；同一原文每次外观都可以不同。", "ok");
+      setStatus("加密完成。语法美化器会让“木”尽量作为小句开头、避免裸着收尾，并保护连续“嘿嘿嘿”；同一原文每次外观仍可不同。", "ok");
     } catch (err) {
       setStatus("加密失败：" + err.message, "err");
     }
@@ -445,10 +478,6 @@
 
   left.addEventListener("input", updateCounts);
   right.addEventListener("input", updateCounts);
-
-  // 一个默认示例，打开网页即可看到效果。
-  left.value = "今晚行动！别忘了带钥匙~ 🤓";
-  right.value = encryptText(left.value, Number(noiseRange.value));
   updateCounts();
 })();
 </script>

@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>邪恶坏笑 Base‑4 加密器</title>
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#171a21;
+      --panel2:#1e222b;
+      --text:#f3f5f7;
+      --muted:#9aa4b2;
+      --border:#2b313c;
+      --accent:#e8e8e8;
+      --danger:#ff8e8e;
+      --ok:#9ee6b0;
+      --shadow:0 18px 60px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255,255,255,.05), transparent 26rem),
+        var(--bg);
+      color:var(--text);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    }
+    .wrap{
+      width:min(1120px, calc(100% - 32px));
+      margin:0 auto;
+      padding:52px 0 70px;
+    }
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:24px;
+      margin-bottom:22px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(28px,4vw,46px);
+      letter-spacing:-.04em;
+    }
+    .sub{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.7;
+      max-width:760px;
+    }
+    .badge{
+      white-space:nowrap;
+      padding:8px 11px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--muted);
+      background:rgba(255,255,255,.025);
+      font-size:13px;
+    }
+    .card{
+      background:rgba(23,26,33,.92);
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px;
+      padding:14px;
+      border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.018);
+    }
+    button{
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:11px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.16s ease;
+    }
+    button:hover{transform:translateY(-1px);border-color:#505968}
+    button.primary{
+      background:var(--accent);
+      color:#111;
+      border-color:transparent;
+    }
+    button.ghost{background:transparent}
+    .grow{flex:1}
+    .noise-control{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:235px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    input[type="range"]{width:120px}
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+    }
+    .pane{padding:16px}
+    .pane + .pane{border-left:1px solid var(--border)}
+    .pane-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .pane-title{font-weight:800}
+    .count{font-size:12px;color:var(--muted)}
+    textarea{
+      width:100%;
+      min-height:360px;
+      resize:vertical;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#11141a;
+      color:var(--text);
+      padding:15px;
+      outline:none;
+      line-height:1.7;
+      font:15px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas,
+        "Liberation Mono","Microsoft YaHei",monospace;
+    }
+    textarea:focus{border-color:#596273}
+    .status{
+      min-height:24px;
+      padding:12px 16px 16px;
+      color:var(--muted);
+      font-size:13px;
+      border-top:1px solid var(--border);
+    }
+    .status.ok{color:var(--ok)}
+    .status.err{color:var(--danger)}
+    .info{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:16px;
+    }
+    .info-box{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:15px;
+      background:rgba(255,255,255,.018);
+    }
+    .info-box h3{margin:0 0 8px;font-size:14px}
+    .info-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+    code{color:#fff}
+    @media(max-width:760px){
+      header{align-items:flex-start;flex-direction:column}
+      .grid{grid-template-columns:1fr}
+      .pane + .pane{border-left:0;border-top:1px solid var(--border)}
+      .info{grid-template-columns:1fr}
+      .noise-control{width:100%}
+      .noise-control input{flex:1}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>邪恶坏笑 Base‑4 加密器 🤓</h1>
+        <p class="sub">
+          用「木、钼、嘿、𬭶」表示四进制数字；原文先编码成 UTF‑8，
+          所以中文、英文、Emoji、换行和标点都能无损恢复。
+        </p>
+      </div>
+      <div class="badge">纯前端 · 不上传任何内容</div>
+    </header>
+
+    <section class="card">
+      <div class="toolbar">
+        <button id="encryptBtn" class="primary">加密 →</button>
+        <button id="decryptBtn">← 解密</button>
+        <button id="swapBtn" class="ghost">交换两栏</button>
+        <button id="clearBtn" class="ghost">清空</button>
+        <div class="grow"></div>
+        <label class="noise-control">
+          坏笑美化强度
+          <input id="noiseRange" type="range" min="0" max="45" value="14" />
+          <span id="noiseValue">14%</span>
+        </label>
+      </div>
+
+      <div class="grid">
+        <div class="pane">
+          <div class="pane-head">
+            <span class="pane-title">左侧</span>
+            <span id="leftCount" class="count">0 字符</span>
+          </div>
+          <textarea id="left" placeholder="输入要加密的原文，例如：今晚行动！🤓"></textarea>
+        </div>
+        <div class="pane">
+          <div class="pane-head">
+            <span class="pane-title">右侧</span>
+            <div>
+              <span id="rightCount" class="count">0 字符</span>
+              <button id="copyBtn" style="margin-left:8px;padding:6px 9px;font-size:12px">复制</button>
+            </div>
+          </div>
+          <textarea id="right" placeholder="例如：木嘿嘿嘿钼木𬭶木~嘿嘿🤓……"></textarea>
+        </div>
+      </div>
+
+      <div id="status" class="status">
+        映射：00→木，01→钼，10→嘿，11→𬭶。美化层会拆开“木钼”、保护“嘿嘿嘿”；🤓 ~ ！ 不参与解密。
+      </div>
+    </section>
+</main>
+
+<script>
+(() => {
+  // 四进制字典：
+  // 0 = 00 = 木
+  // 1 = 01 = 钼
+  // 2 = 10 = 嘿
+  // 3 = 11 = 𬭶
+  const ALPHABET = ["木", "钼", "嘿", "𬭶"];
+  const REVERSE = new Map(ALPHABET.map((ch, i) => [ch, i]));
+  const NOISE = ["🤓", "~", "！"];
+
+  const left = document.getElementById("left");
+  const right = document.getElementById("right");
+  const status = document.getElementById("status");
+  const noiseRange = document.getElementById("noiseRange");
+  const noiseValue = document.getElementById("noiseValue");
+  const leftCount = document.getElementById("leftCount");
+  const rightCount = document.getElementById("rightCount");
+
+  function setStatus(message, type = "") {
+    status.textContent = message;
+    status.className = "status" + (type ? " " + type : "");
+  }
+
+  function countCodePoints(str) {
+    return [...str].length;
+  }
+
+  function updateCounts() {
+    leftCount.textContent = `${countCodePoints(left.value)} 字符`;
+    rightCount.textContent = `${countCodePoints(right.value)} 字符`;
+  }
+
+  function randomNoise(preferSoft = false) {
+    // “~”比感叹号和表情更适合作为词内分隔符。
+    if (preferSoft) {
+      const soft = ["~", "~", "🤓", "！"];
+      return soft[Math.floor(Math.random() * soft.length)];
+    }
+    return NOISE[Math.floor(Math.random() * NOISE.length)];
+  }
+
+  function addNoiseBurst(preferSoft = false) {
+    let out = randomNoise(preferSoft);
+    // 偶尔制造“~~ / 🤓~ / ！！”之类更像语气的结尾或停顿。
+    if (Math.random() < 0.14) out += randomNoise(preferSoft);
+    return out;
+  }
+
+  function decorate(core, densityPercent) {
+    const p = densityPercent / 100;
+    if (p <= 0 || !core) return core;
+
+    const chars = [...core];
+    let result = "";
+    let charsSinceNoise = 0;
+
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      const next = chars[i + 1] ?? "";
+      const prev = chars[i - 1] ?? "";
+
+      result += ch;
+      charsSinceNoise++;
+
+      if (!next) break;
+
+      // 规则 1：强制拆开“木钼”。
+      // 这只是展示层处理，不改变真正的 Base‑4 数据。
+      if (ch === "木" && next === "钼") {
+        result += addNoiseBurst(true);
+        charsSinceNoise = 0;
+        continue;
+      }
+
+      // 规则 2：保护“嘿嘿 / 嘿嘿嘿”。
+      // 坏笑的核心节奏尽量不断开。
+      if (ch === "嘿" && next === "嘿") {
+        continue;
+      }
+
+      // 规则 3：两个“非嘿”字符连在一起时，更容易插入停顿，
+      // 尤其是木/钼之间，看起来更像“坏笑语气”而不是随机汉字。
+      const bothNonHei = ch !== "嘿" && next !== "嘿";
+      if (bothNonHei && charsSinceNoise >= 2 && Math.random() < Math.min(0.78, p * 2.2)) {
+        result += addNoiseBurst(true);
+        charsSinceNoise = 0;
+        continue;
+      }
+
+      // 规则 4：连续出现多个木或多个钼时，适当打断。
+      const repeatedMuMo =
+        (ch === "木" || ch === "钼") &&
+        ch === next;
+
+      if (repeatedMuMo && Math.random() < Math.min(0.62, p * 1.8)) {
+        result += addNoiseBurst(true);
+        charsSinceNoise = 0;
+        continue;
+      }
+
+      // 规则 5：普通随机噪声。
+      // 如果当前正处于“嘿嘿嘿”前后，降低插入概率，避免破坏节奏。
+      const nearHeiRun =
+        (prev === "嘿" && ch === "嘿") ||
+        (ch === "嘿" && next === "嘿");
+
+      const ordinaryProbability = nearHeiRun ? p * 0.18 : p;
+
+      if (charsSinceNoise >= 3 && Math.random() < ordinaryProbability) {
+        result += addNoiseBurst(false);
+        charsSinceNoise = 0;
+      }
+    }
+
+    // 规则 6：结尾更像一句“邪恶坏笑”。
+    // 优先使用 ~ / ！ / 🤓，有时补成双符号。
+    if (Math.random() < 0.82) {
+      const endings = ["~", "！", "🤓", "~~", "~🤓", "！🤓", "！！"];
+      result += endings[Math.floor(Math.random() * endings.length)];
+    }
+
+    return result;
+  }
+
+  function encryptText(text, densityPercent) {
+    const bytes = new TextEncoder().encode(text);
+    let core = "";
+
+    for (const byte of bytes) {
+      // 一个字节 8 bit，每 2 bit 是一个 base‑4 digit，所以固定输出 4 个字。
+      core += ALPHABET[(byte >> 6) & 0b11];
+      core += ALPHABET[(byte >> 4) & 0b11];
+      core += ALPHABET[(byte >> 2) & 0b11];
+      core += ALPHABET[byte & 0b11];
+    }
+
+    return decorate(core, densityPercent);
+  }
+
+  function normalizeCipher(cipher) {
+    // 🤓、~、全角/半角感叹号以及空白都视为展示噪声。
+    return cipher.replace(/🤓|~|！|!|\s/gu, "");
+  }
+
+  function decryptText(cipher) {
+    const clean = normalizeCipher(cipher);
+    const chars = [...clean];
+
+    if (chars.length === 0) return "";
+
+    if (chars.length % 4 !== 0) {
+      throw new Error(`有效密文长度为 ${chars.length}，不是 4 的倍数，可能有字符缺失或混入了非法字符。`);
+    }
+
+    const bytes = new Uint8Array(chars.length / 4);
+
+    for (let i = 0; i < chars.length; i += 4) {
+      let byte = 0;
+
+      for (let j = 0; j < 4; j++) {
+        const digit = REVERSE.get(chars[i + j]);
+        if (digit === undefined) {
+          throw new Error(`发现非法密文字符「${chars[i + j]}」。密文只能包含 木、钼、嘿、𬭶，以及允许的噪声符号。`);
+        }
+        byte = (byte << 2) | digit;
+      }
+
+      bytes[i / 4] = byte;
+    }
+
+    // fatal:true 可以发现密文损坏，而不是静默输出替换字符 �。
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  }
+
+  document.getElementById("encryptBtn").addEventListener("click", () => {
+    try {
+      right.value = encryptText(left.value, Number(noiseRange.value));
+      updateCounts();
+      setStatus("加密完成。美化器会保护“嘿嘿嘿”、强制拆开“木钼”，并随机加入语气符号；同一原文每次外观都可以不同。", "ok");
+    } catch (err) {
+      setStatus("加密失败：" + err.message, "err");
+    }
+  });
+
+  document.getElementById("decryptBtn").addEventListener("click", () => {
+    try {
+      left.value = decryptText(right.value);
+      updateCounts();
+      setStatus("解密完成。🤓、~、！、! 和空白已作为噪声忽略。", "ok");
+    } catch (err) {
+      setStatus("解密失败：" + err.message, "err");
+    }
+  });
+
+  document.getElementById("swapBtn").addEventListener("click", () => {
+    [left.value, right.value] = [right.value, left.value];
+    updateCounts();
+    setStatus("已交换两栏。");
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    left.value = "";
+    right.value = "";
+    updateCounts();
+    setStatus("已清空。");
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(right.value);
+      setStatus("右侧内容已复制。", "ok");
+    } catch {
+      right.select();
+      document.execCommand("copy");
+      setStatus("右侧内容已复制。", "ok");
+    }
+  });
+
+  noiseRange.addEventListener("input", () => {
+    noiseValue.textContent = noiseRange.value + "%";
+  });
+
+  left.addEventListener("input", updateCounts);
+  right.addEventListener("input", updateCounts);
+
+  // 一个默认示例，打开网页即可看到效果。
+  left.value = "今晚行动！别忘了带钥匙~ 🤓";
+  right.value = encryptText(left.value, Number(noiseRange.value));
+  updateCounts();
+})();
+</script>
+</body>
+</html>

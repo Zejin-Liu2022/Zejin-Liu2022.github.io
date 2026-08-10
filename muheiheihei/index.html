@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>邪恶坏笑 Base‑4 加密器</title>
+  <title>邪恶坏笑编码器 V2</title>
   <style>
     :root{
       --bg:#0f1115;
@@ -22,24 +22,18 @@
       margin:0;
       min-height:100vh;
       background:
-        radial-gradient(circle at 20% 0%, rgba(255,255,255,.05), transparent 26rem),
+        radial-gradient(circle at 20% 0%,rgba(255,255,255,.05),transparent 26rem),
         var(--bg);
       color:var(--text);
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
         "Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
     }
     .wrap{
-      width:min(1120px, calc(100% - 32px));
+      width:min(1120px,calc(100% - 32px));
       margin:0 auto;
       padding:52px 0 70px;
     }
-    header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:24px;
-      margin-bottom:22px;
-    }
+    header{margin-bottom:22px}
     h1{
       margin:0;
       font-size:clamp(28px,4vw,46px);
@@ -49,16 +43,7 @@
       margin:10px 0 0;
       color:var(--muted);
       line-height:1.7;
-      max-width:760px;
-    }
-    .badge{
-      white-space:nowrap;
-      padding:8px 11px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      color:var(--muted);
-      background:rgba(255,255,255,.025);
-      font-size:13px;
+      max-width:850px;
     }
     .card{
       background:rgba(23,26,33,.92);
@@ -93,20 +78,7 @@
       border-color:transparent;
     }
     button.ghost{background:transparent}
-    .grow{flex:1}
-    .noise-control{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:235px;
-      color:var(--muted);
-      font-size:13px;
-    }
-    input[type="range"]{width:120px}
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-    }
+    .grid{display:grid;grid-template-columns:1fr 1fr}
     .pane{padding:16px}
     .pane + .pane{border-left:1px solid var(--border)}
     .pane-head{
@@ -120,7 +92,7 @@
     .count{font-size:12px;color:var(--muted)}
     textarea{
       width:100%;
-      min-height:360px;
+      min-height:390px;
       resize:vertical;
       border:1px solid var(--border);
       border-radius:14px;
@@ -129,7 +101,7 @@
       padding:15px;
       outline:none;
       line-height:1.7;
-      font:15px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas,
+      font:15px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,
         "Liberation Mono","Microsoft YaHei",monospace;
     }
     textarea:focus{border-color:#596273}
@@ -138,312 +110,348 @@
       padding:12px 16px 16px;
       color:var(--muted);
       font-size:13px;
+      line-height:1.65;
       border-top:1px solid var(--border);
     }
     .status.ok{color:var(--ok)}
     .status.err{color:var(--danger)}
-    .info{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      margin-top:16px;
+    .stats{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 16px;
+      padding:12px 16px;
+      color:var(--muted);
+      font-size:12px;
+      border-top:1px solid var(--border);
+      background:rgba(255,255,255,.012);
     }
-    .info-box{
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:15px;
-      background:rgba(255,255,255,.018);
-    }
-    .info-box h3{margin:0 0 8px;font-size:14px}
-    .info-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
-    code{color:#fff}
+    .stats strong{color:var(--text)}
     @media(max-width:760px){
-      header{align-items:flex-start;flex-direction:column}
       .grid{grid-template-columns:1fr}
       .pane + .pane{border-left:0;border-top:1px solid var(--border)}
-      .info{grid-template-columns:1fr}
-      .noise-control{width:100%}
-      .noise-control input{flex:1}
     }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <div>
-        <h1>邪恶坏笑 Base‑4 加密器 🤓</h1>
-        <p class="sub">
-          用「木、钼、嘿、𬭶」表示四进制数字；原文先编码成 UTF‑8，
-          所以中文、英文、Emoji、换行和标点都能无损恢复。
-        </p>
-      </div>
-    </header>
+<main class="wrap">
+  <header>
+    <h1>邪恶坏笑编码器 V2 🤓</h1>
+  </header>
 
-    <section class="card">
-      <div class="toolbar">
-        <button id="encryptBtn" class="primary">加密 →</button>
-        <button id="decryptBtn">← 解密</button>
-        <button id="swapBtn" class="ghost">交换两栏</button>
-        <button id="clearBtn" class="ghost">清空</button>
-        <div class="grow"></div>
-        <label class="noise-control">
-          坏笑语法强度
-          <input id="noiseRange" type="range" min="0" max="45" value="14" />
-          <span id="noiseValue">14%</span>
-        </label>
-      </div>
+  <section class="card">
+    <div class="toolbar">
+      <button id="encryptBtn" class="primary">加密 →</button>
+      <button id="decryptBtn">← 解密</button>
+      <button id="swapBtn" class="ghost">交换两栏</button>
+      <button id="clearBtn" class="ghost">清空</button>
+      <button id="copyBtn" class="ghost">复制右侧</button>
+    </div>
 
-      <div class="grid">
-        <div class="pane">
-          <div class="pane-head">
-            <span class="pane-title">左侧</span>
-            <span id="leftCount" class="count">0 字符</span>
-          </div>
-          <textarea id="left" placeholder="输入要加密的原文，例如：今晚行动！🤓"></textarea>
+    <div class="grid">
+      <div class="pane">
+        <div class="pane-head">
+          <span class="pane-title">原文</span>
+          <span id="leftCount" class="count">0 字符</span>
         </div>
-        <div class="pane">
-          <div class="pane-head">
-            <span class="pane-title">右侧</span>
-            <div>
-              <span id="rightCount" class="count">0 字符</span>
-              <button id="copyBtn" style="margin-left:8px;padding:6px 9px;font-size:12px">复制</button>
-            </div>
-          </div>
-          <textarea id="right" placeholder="例如：木嘿嘿嘿钼木𬭶木~嘿嘿🤓……"></textarea>
-        </div>
+        <textarea id="left" placeholder="输入要加密的内容"></textarea>
       </div>
 
-      <div id="status" class="status">
-        映射：00→木，01→钼，10→嘿，11→𬭶。语法层把“木、钼”都视为木音：倾向开句、不裸着收尾、连续木音必须拆开，并尽量保护“嘿嘿嘿”；🤓 ~ ！ 不参与解密。
+      <div class="pane">
+        <div class="pane-head">
+          <span class="pane-title">坏笑密文</span>
+          <span id="rightCount" class="count">0 字符</span>
+        </div>
+        <textarea id="right" placeholder="输入或生成 V2 坏笑密文"></textarea>
       </div>
-    </section>
+    </div>
+  </section>
 </main>
 
 <script>
 (() => {
-  // 四进制字典：
-  // 0 = 00 = 木
-  // 1 = 01 = 钼
-  // 2 = 10 = 嘿
-  // 3 = 11 = 𬭶
-  const ALPHABET = ["木", "钼", "嘿", "𬭶"];
-  const REVERSE = new Map(ALPHABET.map((ch, i) => [ch, i]));
-  const NOISE = ["🤓", "~", "！"];
-  const MU_SOUNDS = new Set(["木", "钼"]);
+  const HEADS = ["木", "钼", "嘿", "𬭶"];
+  const AFTER_HEAD = ["嘿", "𬭶", "~", "！", "🤓"];
+  const AFTER_BOUNDARY = ["木", "钼", "嘿", "𬭶", "~", "！", "🤓"];
+  const PUNCT = new Set(["~", "！", "🤓"]);
+  const VALID = new Set(AFTER_BOUNDARY);
+
+  // 协议头："EL" + version 2 + flags + CRC16
+  const MAGIC_0 = 0x45;
+  const MAGIC_1 = 0x4C;
+  const VERSION = 0x02;
+  const FLAG_GZIP = 0x01;
 
   const left = document.getElementById("left");
   const right = document.getElementById("right");
-  const status = document.getElementById("status");
-  const noiseRange = document.getElementById("noiseRange");
-  const noiseValue = document.getElementById("noiseValue");
   const leftCount = document.getElementById("leftCount");
   const rightCount = document.getElementById("rightCount");
 
-  function setStatus(message, type = "") {
-    status.textContent = message;
-    status.className = "status" + (type ? " " + type : "");
-  }
-
-  function countCodePoints(str) {
-    return [...str].length;
+  function cpLength(s) {
+    return [...s].length;
   }
 
   function updateCounts() {
-    leftCount.textContent = `${countCodePoints(left.value)} 字符`;
-    rightCount.textContent = `${countCodePoints(right.value)} 字符`;
+    leftCount.textContent = `${cpLength(left.value)} 字符`;
+    rightCount.textContent = `${cpLength(right.value)} 字符`;
   }
 
-  function randomFrom(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+  function setStatus(_msg, _type = "") {}
+
+  function setStats(_parts) {}
+
+  function crc16(bytes) {
+    let crc = 0xFFFF;
+    for (const byte of bytes) {
+      crc ^= byte << 8;
+      for (let i = 0; i < 8; i++) {
+        crc = (crc & 0x8000)
+          ? ((crc << 1) ^ 0x1021) & 0xFFFF
+          : (crc << 1) & 0xFFFF;
+      }
+    }
+    return crc;
   }
 
-  function phraseSeparator(strengthPercent, soft = false) {
-    const strength = strengthPercent / 100;
+  async function streamTransform(bytes, kind, format) {
+    const Ctor = kind === "compress" ? CompressionStream : DecompressionStream;
+    const stream = new Blob([bytes]).stream().pipeThrough(new Ctor(format));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
 
-    // 句中更偏向 ~，句尾更偏向 ！/🤓。
-    const softPool = ["~", "~", "~", "！", "🤓"];
-    const hardPool = ["！", "~", "🤓", "！！", "~🤓", "！🤓"];
+  async function maybeCompress(raw) {
+    if (!("CompressionStream" in window)) {
+      return { payload: raw, flags: 0, compressed: false };
+    }
+    try {
+      const gz = await streamTransform(raw, "compress", "gzip");
+      // 只在真的更短时使用，避免短文本被 gzip 头部拖累。
+      if (gz.length < raw.length) {
+        return { payload: gz, flags: FLAG_GZIP, compressed: true };
+      }
+    } catch (_) {}
+    return { payload: raw, flags: 0, compressed: false };
+  }
 
-    let out = randomFrom(soft ? softPool : hardPool);
+  async function maybeDecompress(payload, flags) {
+    if (!(flags & FLAG_GZIP)) return payload;
+    if (!("DecompressionStream" in window)) {
+      throw new Error("当前浏览器不支持 DecompressionStream，无法解压这段 V2 密文。");
+    }
+    return await streamTransform(payload, "decompress", "gzip");
+  }
 
-    // 强度越高，越可能追加第二个语气符号。
-    if (Math.random() < strength * 0.35) {
-      out += randomFrom(["~", "！", "🤓"]);
+  function concatBytes(...arrays) {
+    const total = arrays.reduce((n, a) => n + a.length, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const a of arrays) {
+      out.set(a, offset);
+      offset += a.length;
     }
     return out;
   }
 
-  function decorate(core, strengthPercent) {
-    if (!core) return core;
-
-    const chars = [...core];
-    const strength = Math.max(0, Math.min(100, strengthPercent)) / 100;
-    const phrases = [];
-    let current = "";
-
-    function flushCurrent() {
-      if (current) {
-        phrases.push(current);
-        current = "";
-      }
+  function bytesToBigInt(bytes) {
+    // 前置 0x01 哨兵，确保 payload 中的前导 0 字节不会丢失。
+    let n = 1n;
+    for (const b of bytes) {
+      n = (n << 8n) | BigInt(b);
     }
+    return n;
+  }
+
+  function bigIntToBytes(n) {
+    if (n <= 0n) throw new Error("密文数值无效。");
+    const arr = [];
+    while (n > 0n) {
+      arr.push(Number(n & 0xFFn));
+      n >>= 8n;
+    }
+    arr.reverse();
+    if (arr[0] !== 0x01) {
+      throw new Error("V2 哨兵校验失败，密文可能被修改。");
+    }
+    return new Uint8Array(arr.slice(1));
+  }
+
+  function allowedAt(index, state) {
+    if (index === 0) return HEADS;
+    return state === "boundary" ? AFTER_BOUNDARY : AFTER_HEAD;
+  }
+
+  function encodeConstrained(bytes) {
+    let n = bytesToBigInt(bytes);
+    let out = "";
+    let state = "head";
+    let index = 0;
+
+    // 混合进制：首字符 radix 4；
+    // 普通音后 radix 5；语气符号后 radix 7。
+    while (n > 0n) {
+      const allowed = allowedAt(index, state);
+      const radix = BigInt(allowed.length);
+      const digit = Number(n % radix);
+      n /= radix;
+
+      const ch = allowed[digit];
+      out += ch;
+      state = PUNCT.has(ch) ? "boundary" : "head";
+      index++;
+    }
+    return out;
+  }
+
+  function decodeConstrained(cipher) {
+    const chars = [...cipher].filter(ch => !/\s/u.test(ch));
+    if (!chars.length) return new Uint8Array();
+
+    let state = "head";
+    const digits = [];
+    const radices = [];
 
     for (let i = 0; i < chars.length; i++) {
       const ch = chars[i];
-      const prev = chars[i - 1] ?? "";
-      const next = chars[i + 1] ?? "";
-      const isMu = MU_SOUNDS.has(ch);
-      const nextIsMu = MU_SOUNDS.has(next);
-
-      // 核心规则：
-      // “木音”包括 木、钼。它们都倾向于作为一个坏笑小句的开头。
-      // 如果当前句已经有内容，再遇到木音，就先结束上一句。
-      if (isMu && current.length > 0) {
-        flushCurrent();
+      if (!VALID.has(ch)) {
+        throw new Error(`发现非法字符「${ch}」。V2 只允许 木、钼、嘿、𬭶、~、！、🤓 和空白。`);
       }
 
-      current += ch;
-
-      // 连续“嘿嘿 / 嘿嘿嘿”尽量不断句。
-      if (ch === "嘿" && next === "嘿") {
-        continue;
-      }
-
-      // 如果当前句只有一个木音，而下一个仍是木音，
-      // 当前木音单独成句，避免 木木 / 木钼 / 钼木 / 钼钼 连在一起。
-      if (isMu && [...current].length === 1 && nextIsMu) {
-        flushCurrent();
-        continue;
-      }
-
-      // 对非木音开头的小句，允许自然延伸；
-      // 强度较高时，在较长句中适当切分，但避免拆开“嘿嘿嘿”。
-      const cpLen = [...current].length;
-      const protectedHeiRun =
-        (prev === "嘿" && ch === "嘿") ||
-        (ch === "嘿" && next === "嘿");
-
-      if (
-        cpLen >= 5 &&
-        !protectedHeiRun &&
-        next &&
-        !nextIsMu &&
-        Math.random() < strength * 0.18
-      ) {
-        flushCurrent();
-      }
-    }
-
-    flushCurrent();
-
-    // 拼接坏笑小句。
-    // 分隔符全部属于展示层，解密时会直接丢弃。
-    let result = "";
-
-    for (let i = 0; i < phrases.length; i++) {
-      const phrase = phrases[i];
-      result += phrase;
-
-      const isLast = i === phrases.length - 1;
-      const phraseChars = [...phrase];
-      const isSingleMu =
-        phraseChars.length === 1 && MU_SOUNDS.has(phraseChars[0]);
-      const endsWithMu =
-        phraseChars.length > 0 && MU_SOUNDS.has(phraseChars[phraseChars.length - 1]);
-
-      if (!isLast) {
-        // 句间必须有分隔，使下一个木音视觉上成为新句开头。
-        if (isSingleMu) {
-          result += randomFrom(["！", "~", "🤓", "！🤓", "~🤓"]);
-        } else {
-          result += phraseSeparator(strengthPercent, true);
+      const allowed = allowedAt(i, state);
+      const digit = allowed.indexOf(ch);
+      if (digit < 0) {
+        if (ch === "木" || ch === "钼") {
+          throw new Error(`第 ${i + 1} 个字符「${ch}」违反木音语法：木/钼只能出现在开头或语气符号之后。`);
         }
-        continue;
+        throw new Error(`第 ${i + 1} 个字符不符合 V2 状态规则。`);
       }
 
-      // 木音一般不裸着做最终结尾。
-      // 单独一个 木/钼 可以成句，但必须带语气符号。
-      if (endsWithMu) {
-        result += isSingleMu
-          ? randomFrom(["！", "~", "🤓", "！🤓", "~🤓"])
-          : randomFrom(["~", "！", "🤓"]);
-      } else {
-        // 嘿可以自然收尾，所以允许不加任何符号。
-        const baseChance = 0.38 + strength * 0.5;
-        if (Math.random() < baseChance) {
-          result += phraseSeparator(strengthPercent, false);
-        }
-      }
+      digits.push(digit);
+      radices.push(allowed.length);
+      state = PUNCT.has(ch) ? "boundary" : "head";
     }
 
-    return result;
+    let n = 0n;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      n = BigInt(digits[i]) + BigInt(radices[i]) * n;
+    }
+    return bigIntToBytes(n);
   }
 
-  function encryptText(text, densityPercent) {
-    const bytes = new TextEncoder().encode(text);
-    let core = "";
-
-    for (const byte of bytes) {
-      // 一个字节 8 bit，每 2 bit 是一个 base‑4 digit，所以固定输出 4 个字。
-      core += ALPHABET[(byte >> 6) & 0b11];
-      core += ALPHABET[(byte >> 4) & 0b11];
-      core += ALPHABET[(byte >> 2) & 0b11];
-      core += ALPHABET[byte & 0b11];
+  async function encryptText(text) {
+    if (!text) {
+      return { cipher: "", rawBytes: 0, storedBytes: 0, compressed: false };
     }
 
-    return decorate(core, densityPercent);
+    const raw = new TextEncoder().encode(text);
+    const packed = await maybeCompress(raw);
+    const checksum = crc16(raw);
+
+    const header = new Uint8Array([
+      MAGIC_0, MAGIC_1, VERSION, packed.flags,
+      (checksum >> 8) & 0xFF,
+      checksum & 0xFF
+    ]);
+
+    const protocolBytes = concatBytes(header, packed.payload);
+    const cipher = encodeConstrained(protocolBytes);
+
+    return {
+      cipher,
+      rawBytes: raw.length,
+      storedBytes: packed.payload.length,
+      protocolBytes: protocolBytes.length,
+      compressed: packed.compressed
+    };
   }
 
-  function normalizeCipher(cipher) {
-    // 🤓、~、全角/半角感叹号以及空白都视为展示噪声。
-    return cipher.replace(/🤓|~|！|!|\s/gu, "");
-  }
-
-  function decryptText(cipher) {
-    const clean = normalizeCipher(cipher);
-    const chars = [...clean];
-
-    if (chars.length === 0) return "";
-
-    if (chars.length % 4 !== 0) {
-      throw new Error(`有效密文长度为 ${chars.length}，不是 4 的倍数，可能有字符缺失或混入了非法字符。`);
+  async function decryptText(cipher) {
+    if (!cipher.trim()) {
+      return { text: "", rawBytes: 0, storedBytes: 0, compressed: false };
     }
 
-    const bytes = new Uint8Array(chars.length / 4);
-
-    for (let i = 0; i < chars.length; i += 4) {
-      let byte = 0;
-
-      for (let j = 0; j < 4; j++) {
-        const digit = REVERSE.get(chars[i + j]);
-        if (digit === undefined) {
-          throw new Error(`发现非法密文字符「${chars[i + j]}」。密文只能包含 木、钼、嘿、𬭶，以及允许的噪声符号。`);
-        }
-        byte = (byte << 2) | digit;
-      }
-
-      bytes[i / 4] = byte;
+    const protocolBytes = decodeConstrained(cipher);
+    if (protocolBytes.length < 6) {
+      throw new Error("密文过短，不是有效的 V2 数据。");
     }
 
-    // fatal:true 可以发现密文损坏，而不是静默输出替换字符 �。
-    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    if (
+      protocolBytes[0] !== MAGIC_0 ||
+      protocolBytes[1] !== MAGIC_1 ||
+      protocolBytes[2] !== VERSION
+    ) {
+      throw new Error("协议头不匹配：这不是当前 V2 编码生成的密文。");
+    }
+
+    const flags = protocolBytes[3];
+    const expectedCrc = (protocolBytes[4] << 8) | protocolBytes[5];
+    const payload = protocolBytes.slice(6);
+    const raw = await maybeDecompress(payload, flags);
+
+    const actualCrc = crc16(raw);
+    if (actualCrc !== expectedCrc) {
+      throw new Error("CRC16 校验失败：密文可能有字符被增删或修改。");
+    }
+
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(raw);
+    return {
+      text,
+      rawBytes: raw.length,
+      storedBytes: payload.length,
+      compressed: !!(flags & FLAG_GZIP)
+    };
   }
 
-  document.getElementById("encryptBtn").addEventListener("click", () => {
+  document.getElementById("encryptBtn").addEventListener("click", async () => {
     try {
-      right.value = encryptText(left.value, Number(noiseRange.value));
+      const result = await encryptText(left.value);
+      right.value = result.cipher;
       updateCounts();
-      setStatus("加密完成。语法美化器会把“木、钼”统一按木音处理：尽量作为小句开头、避免裸着收尾、连续木音强制拆开，并保护“嘿嘿嘿”。", "ok");
+
+      if (!left.value) {
+        setStats([
+          ["协议", "V2 状态约束编码"],
+          ["有效字符", "木 钼 嘿 𬭶 ~ ！ 🤓"]
+        ]);
+        setStatus("请输入原文。");
+        return;
+      }
+
+      const legacyBase4 = result.rawBytes * 4;
+      const ratio = legacyBase4
+        ? ((cpLength(result.cipher) / legacyBase4) * 100).toFixed(1) + "%"
+        : "—";
+
+      setStats([
+        ["UTF-8", `${result.rawBytes} B`],
+        [result.compressed ? "gzip 后" : "未压缩", `${result.storedBytes} B`],
+        ["V2 密文", `${cpLength(result.cipher)} 字符`],
+        ["相对旧 Base4 核心", ratio]
+      ]);
+
+      setStatus(
+        result.compressed
+          ? "加密完成。gzip 有收益，已自动启用；所有 ~、！、🤓 都是数据的一部分，没有随机噪声。"
+          : "加密完成。该文本 gzip 没有变短，因此直接编码；所有字符都参与传递信息。",
+        "ok"
+      );
     } catch (err) {
       setStatus("加密失败：" + err.message, "err");
     }
   });
 
-  document.getElementById("decryptBtn").addEventListener("click", () => {
+  document.getElementById("decryptBtn").addEventListener("click", async () => {
     try {
-      left.value = decryptText(right.value);
+      const result = await decryptText(right.value);
+      left.value = result.text;
       updateCounts();
-      setStatus("解密完成。🤓、~、！、! 和空白已作为噪声忽略。", "ok");
+
+      setStats([
+        ["解码后 UTF-8", `${result.rawBytes} B`],
+        [result.compressed ? "密文载荷（gzip）" : "密文载荷", `${result.storedBytes} B`],
+        ["CRC16", "通过"],
+        ["协议", "V2"]
+      ]);
+
+      setStatus("解密完成，木音语法、协议头与 CRC16 校验均通过。", "ok");
     } catch (err) {
       setStatus("解密失败：" + err.message, "err");
     }
@@ -459,22 +467,22 @@
     left.value = "";
     right.value = "";
     updateCounts();
+    setStats([
+      ["协议", "V2 状态约束编码"],
+      ["有效字符", "木 钼 嘿 𬭶 ~ ！ 🤓"]
+    ]);
     setStatus("已清空。");
   });
 
   document.getElementById("copyBtn").addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(right.value);
-      setStatus("右侧内容已复制。", "ok");
-    } catch {
+      setStatus("右侧密文已复制。", "ok");
+    } catch (_) {
       right.select();
       document.execCommand("copy");
-      setStatus("右侧内容已复制。", "ok");
+      setStatus("右侧密文已复制。", "ok");
     }
-  });
-
-  noiseRange.addEventListener("input", () => {
-    noiseValue.textContent = noiseRange.value + "%";
   });
 
   left.addEventListener("input", updateCounts);
